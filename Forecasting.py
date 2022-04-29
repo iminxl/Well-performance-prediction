@@ -1,10 +1,9 @@
 #!/usr/bin/env python
 # coding: utf-8
 
-# # **加载模块，读取数据**
-#                     _ooOoo_
-#                    o8888888o
+#从jupyter file download as .py转换生成
 
+# # **加载模块，读取数据**
 
 # In[ ]:
 
