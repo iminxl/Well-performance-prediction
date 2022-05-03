@@ -6,8 +6,9 @@
 '''
 
 # # **加载模块，读取数据**
+# 
 
-# In[ ]:
+# In[153]:
 
 
 #所有需要的模块
@@ -32,7 +33,7 @@ plt.rcParams['axes.unicode_minus']=False
 #     PG101-3 102-2 201-1 201-2 301-3 302-3 2011-5 3011-5
 #     '''
 
-dataname='PG3011-5.csv'
+dataname='PG102-2.csv'
 pdread=dataname#+'.csv'
 data=pd.read_csv(pdread,encoding='gb2312')
 #数据表格展示
@@ -48,7 +49,7 @@ print('You are using: ' + str(DEVICE))
 
 # ## 计算日产气能、日产水能
 
-# In[ ]:
+# In[154]:
 
 
 #g_ene日产气能
@@ -57,7 +58,7 @@ g_ene=data['日产混合气']/data['生产时间']
 g_ene.isna().sum()
 
 
-# In[ ]:
+# In[155]:
 
 
 #w_ene日产水能
@@ -68,14 +69,14 @@ w_ene.isna().sum()
 
 # ## 填充缺失值，组成数据集
 
-# In[ ]:
+# In[156]:
 
 
 #查看有默认标记的异常值
 data.iloc[data.values == '?'].count()
 
 
-# In[ ]:
+# In[157]:
 
 
 #缺失值填充
@@ -99,27 +100,27 @@ def fill_missing(values):
         
 
 
-# In[ ]:
+# In[158]:
 
 
 fill_missing(g_ene.values) # 填充缺失值
 fill_missing(w_ene.values)
 
 
-# In[ ]:
+# In[159]:
 
 
 data['日产气能']=g_ene
 data['日产水能']=w_ene
 
 
-# In[ ]:
+# In[160]:
 
 
 data
 
 
-# In[ ]:
+# In[161]:
 
 
 #再次检测异常值
@@ -128,7 +129,7 @@ data.isna().sum()
 
 # # 生成训练数据集
 
-# In[ ]:
+# In[162]:
 
 
 #取前三列数据
@@ -141,7 +142,7 @@ raw_data=data_nh.to_numpy()
 data_nh
 
 
-# In[ ]:
+# In[163]:
 
 
 #绘制图像
@@ -187,7 +188,7 @@ plt.ylabel('日产水能',fontsize=20)
 data[ '日产水能' ].plot(color='deepskyblue')
 
 
-# In[ ]:
+# In[164]:
 
 
 #散点图
@@ -231,7 +232,7 @@ plt.ylabel('日产水能',fontsize=20)
 plt.scatter(range(0,len(data_nh.iloc[:,13])),data_nh.iloc[:,13],c='deepskyblue',marker='.')
 
 
-# In[ ]:
+# In[165]:
 
 
 #绘制分布图——日产气能
@@ -243,7 +244,7 @@ plt.hist(data_nh.iloc[:,12], bins=80, histtype="stepfilled", alpha=.8,color='dee
 
 # # 数据清洗
 
-# In[ ]:
+# In[166]:
 
 
 #异常值检测
@@ -281,7 +282,7 @@ pyplot.show()
 rolling_mean,rolling_std
 
 
-# In[ ]:
+# In[167]:
 
 
 EN=data_nh.iloc[:,12]
@@ -294,13 +295,13 @@ C.astype(int)
 A.sum(),B.sum(),C.sum(),C
 
 
-# In[ ]:
+# In[168]:
 
 
 EN[1]
 
 
-# In[ ]:
+# In[169]:
 
 
 ENN=[]
@@ -313,7 +314,7 @@ for i in C:
     t+=1
 
 
-# In[ ]:
+# In[170]:
 
 
 plt.figure(figsize=(30,10))
@@ -329,7 +330,7 @@ plt.legend(['True','Predict','Range'])
 pyplot.show()
 
 
-# In[ ]:
+# In[171]:
 
 
 plt.figure(figsize=(30,10))
@@ -340,151 +341,29 @@ plt.tick_params(labelsize=20)
 plt.legend(['Raw','Processed'])
 
 
-# In[ ]:
+# In[172]:
 
 
 D_P_ERROR=data_nh.iloc[:,12]-ENN
 D_P_ERROR,D_P_ERROR.sum()/len(D_P_ERROR)/np.mean(ENN),'可接受'
 
 
-# In[ ]:
+# In[173]:
 
 
 data_nh.iloc[:,12]=ENN
 data_nh.iloc[:,12]==ENN
 
 
-# In[ ]:
+# In[174]:
 
 
 data_nh
 
 
-# # TgDPP 时间序列分解
+# # 数据归一化和相关性分析
 
-# In[ ]:
-
-
-#STL时间序列分解
-
-from statsmodels.tsa.seasonal import STL
-plt.figure(figsize=(30,10))
-stl = STL(data_nh.iloc[:,12], period=365, robust=True)
-res_robust = stl.fit()
-
-fig = res_robust.plot()
-
-
-raw_data_reconstructed_STL = pd.concat([res_robust.seasonal, res_robust.trend, res_robust.resid, res_robust.observed], axis=1)
-raw_data_reconstructed_STL.columns = ['Seasonal', 'Trend', 'Resid', 'Actual_value']
-
-print(raw_data_reconstructed_STL)
-
-
-# In[ ]:
-
-
-
-plt.figure(figsize=(20,5))
-ax1 = plt.subplot(4, 1, 1) # 两行一列，位置是1的子图
-plt.plot(range(0,len(data_nh.iloc[:,12])), res_robust.observed, 'deepskyblue')
-plt.tick_params(labelsize=12)
-plt.ylabel('气井产能',fontsize=20)
-plt.title(dataname,fontsize=20)
-
-plt.figure(figsize=(10,5))
-ax2 = plt.subplot(4, 1, 2)
-plt.plot(range(0,len(data_nh.iloc[:,12])), res_robust.trend, 'deepskyblue')
-plt.tick_params(labelsize=12)
-plt.ylabel('趋势项',fontsize=20)
-
-plt.figure(figsize=(10,5))
-ax2 = plt.subplot(4, 1, 2)
-plt.plot(range(0,len(data_nh.iloc[:,12])), res_robust.seasonal, 'deepskyblue')
-plt.tick_params(labelsize=12)
-plt.ylabel('周期项',fontsize=20)
-
-plt.figure(figsize=(10,5))
-ax2 = plt.subplot(4, 1, 2)
-plt.scatter(range(0,len(data_nh.iloc[:,12])), res_robust.resid, c='deepskyblue',marker='.')
-plt.tick_params(labelsize=12)
-plt.ylabel('残差项',fontsize=20)
-# fig_sub.savefig(dataname, transparent=True)
-plt.show()
-
-
-# In[ ]:
-
-
-plt.figure(figsize=(10,5))
-ax2 = plt.subplot(4, 1, 2)
-plt.plot(range(0,len(data_nh.iloc[:,12])), res_robust.seasonal+res_robust.resid, 'deepskyblue')
-plt.tick_params(labelsize=12)
-plt.ylabel('波动项',fontsize=20)
-
-
-# In[ ]:
-
-
-print(res_robust.observed)
-
-print(max(res_robust.observed))
-
-print(min(res_robust.observed))
-
-
-# # TgDPP 数据统计分析和剔除、标准化处理
-
-# In[ ]:
-
-
-#绘制残差分布
-plt.figure(figsize=(10,10))
-plt.hist(res_robust.resid, bins=80, histtype="stepfilled", alpha=.8,color='deepskyblue')
-
-#导入scipy模块
-from scipy import stats
- 
-"""
-kstest方法：KS检验，参数分别是：待检验的数据，检验方法（这里设置成norm正态分布），均值与标准差
-结果返回两个值：statistic → D值，pvalue → P值
-p值大于0.05，为正态分布
-H0:样本符合  
-H1:样本不符合 
-如果p>0.05接受H0 ,反之 
-"""
-
-mu = res_robust.resid.mean()  # 计算均值
-std = res_robust.resid.std()  # 计算标准差
-print(stats.kstest(res_robust.resid, 'norm', (mu, std)))
-up=mu+3*std
-down=mu-3*std
-
-# 计算均值mu
-# 计算标准差std
-
-
-# In[ ]:
-
-
-#3σ原则剔除离群点，用平均值代替
-res_robust.resid[res_robust.resid>up]=mu
-res_robust.resid[res_robust.resid<down]=mu
-plt.figure()
-plt.figure(figsize=(30,5))
-plt.scatter(range(0,len(res_robust.resid)),res_robust.resid,color='deepskyblue')
-
-
-# In[ ]:
-
-
-data_nh['趋势']=res_robust.trend
-data_nh['波动项']=res_robust.resid+res_robust.seasonal
-
-
-# # 数据归一化
-
-# In[ ]:
+# In[175]:
 
 
 #标准化处理
@@ -495,14 +374,14 @@ data_nh_std=data_nh.apply(lambda x : (x-np.min(x))/(np.max(x)-np.min(x)))
 data_nh_std
 
 
-# In[ ]:
+# In[176]:
 
 
 #存储标准化数据
 data_nh_std.to_csv(dataname+'_a'+'.csv')
 
 
-# In[ ]:
+# In[177]:
 
 
 #相关性分析
@@ -526,9 +405,7 @@ plt.show()
 #     sns.heatmap(corr, mask=mask, vmax=.3, fmt="d", linewidths=0.5, ax=ax,cmap='cool')
 
 
-# # 相关性分析、选择特征
-
-# In[ ]:
+# In[178]:
 
 
 #划分数据集
@@ -605,7 +482,7 @@ n_out=7
 train,test,valid,train_X,train_y,test_X,test_y,valid_X,valid_y=data_processing(sw_width,n_out)
 
 
-# In[ ]:
+# In[179]:
 
 
 #解决中文显示问题
@@ -675,7 +552,7 @@ data_nh_std[ '日产水能' ].plot(color='deepskyblue')
 
 # ## ARMA
 
-# In[ ]:
+# In[180]:
 
 
 # data=pd.read_csv(pdread,encoding='gb2312',index_col=u'日期')
@@ -684,7 +561,7 @@ data_ar=data_nh_std.iloc[:,12:13]
 data_ar
 
 
-# In[ ]:
+# In[181]:
 
 
 import pandas as pd
@@ -698,13 +575,13 @@ data_ar.plot()
 plt.show()
 
 
-# In[ ]:
+# In[182]:
 
 
 data_ar.isna().sum()
 
 
-# In[ ]:
+# In[183]:
 
 
 # 平稳性检测
@@ -718,7 +595,7 @@ print(u'原始序列的ADF检验结果为：', ADF(data_ar[u'日产气能']))
 # 返回值依次为adf、pvalue、usedlag、nobs、critical values、icbest、regresults、resstore
 
 
-# In[ ]:
+# In[184]:
 
 
 # 差分后的结果
@@ -736,7 +613,7 @@ from statsmodels.stats.diagnostic import acorr_ljungbox
 print(u'差分序列的白噪声检验结果为：', acorr_ljungbox(D_data, lags=1))  # 返回统计量和p值
 
 
-# In[ ]:
+# In[185]:
 
 
 from statsmodels.tsa.arima_model import ARMA
@@ -757,7 +634,7 @@ ARMSE=mean_squared_error(AR_result,data_ar['日产气能'].values[-322-322:])
 print('MSE:',ARMSE)
 
 
-# In[ ]:
+# In[186]:
 
 
 plt.figure(figsize=(30,10))
@@ -778,7 +655,7 @@ plt.legend(['True','Predict','Error'])
 
 # ## ARIMA
 
-# In[ ]:
+# In[187]:
 
 
 from statsmodels.tsa.arima_model import ARIMA
@@ -799,7 +676,7 @@ ARIMSE=mean_squared_error(ARI_result,data_ar['日产气能'].values[-322-322:])
 print('MSE:',ARIMSE)
 
 
-# In[ ]:
+# In[188]:
 
 
 plt.figure(figsize=(30,10))
@@ -818,24 +695,12 @@ plt.tick_params(labelsize=20)
 plt.legend(['True','Predict','Error'])
 
 
-# In[ ]:
-
-
-
-
-
-# In[ ]:
-
-
-
-
-
 # # 神经网络方法
 # 
 
-# ## 数据处理和绘图函数
+# ## 数据处理\绘图
 
-# In[ ]:
+# In[285]:
 
 
 import numpy as np
@@ -857,9 +722,16 @@ train_size=train_y.shape[0]*train_y.shape[1]
 valid_size=valid_y.shape[0]*valid_y.shape[1]
 test_size=test_y.shape[0]*test_y.shape[1]
 
+#对train、valid、test计算长度
+trainstep=np.linspace(0, train_size, train_size, dtype=np.float32)
+validstep=np.linspace(train_size,train_size+len(valid),len(valid)-sw_width-n_out,dtype=np.float32)
+teststep=np.linspace(train_size+valid_size,train_size+valid_size+len(test),len(test)-sw_width-n_out,dtype=np.float32)
 
-# In[ ]:
 
+# In[286]:
+
+
+#数据的展示
 
 plt.figure(figsize=(20,5))
 plt.ylabel('日产气能',fontsize=20)
@@ -869,7 +741,7 @@ plt.axvline(train_size,c='violet')
 plt.axvline(train_size+valid_size,c='violet')
 
 
-# In[ ]:
+# In[287]:
 
 
 #数据tensor化
@@ -901,10 +773,17 @@ def data2tensor(MLP_trainX=MLP_trainX,
     test_x_tensor = test_x_tensor.to(torch.float32)
     test_y_tensor = test_y_tensor.to(torch.float32)
     
-    return train_x_tensor,train_y_tensor,valid_x_tensor,valid_y_tensor,test_x_tensor,test_y_tensor  
+    return train_x_tensor,train_y_tensor,valid_x_tensor,valid_y_tensor,test_x_tensor,test_y_tensor
 
 
-# In[ ]:
+# In[288]:
+
+
+#data变tensor
+train_x_tensor,train_y_tensor,valid_x_tensor,valid_y_tensor,test_x_tensor,test_y_tensor=data2tensor()
+
+
+# In[289]:
 
 
 #计算残差
@@ -927,7 +806,7 @@ def residcount(predictive_y_for_training,
     return deltaytrain,deltayvalid,deltaytest
 
 
-# In[ ]:
+# In[290]:
 
 
 #损失下降曲线图
@@ -961,7 +840,7 @@ def lossdecrease(trainl,
     plt.ylim(0.001, 1.20)
 
 
-# In[ ]:
+# In[291]:
 
 
 #预测结果图
@@ -1008,7 +887,7 @@ def allplots(trainstep,
     
 
 
-# In[ ]:
+# In[292]:
 
 
 #残差分布图
@@ -1021,7 +900,7 @@ def residualsplots(data1,
     plt.setp(markerline, 'markerfacecolor', 'cornflowerblue')    # make points blue
 
 
-# In[ ]:
+# In[293]:
 
 
 #箱线图
@@ -1034,7 +913,7 @@ def boxplot(data1,
     plt.show()
 
 
-# In[ ]:
+# In[294]:
 
 
 #交叉分布图
@@ -1059,9 +938,127 @@ def jointplot(data1,
     
 
 
-# ## 多层感知机MLPs/ANN
+# In[295]:
 
-# In[ ]:
+
+def allfigues(predictive_y_for_training,
+             predictive_y_for_validing,
+             predictive_y_for_testing,
+             deltaytrain,
+             deltayvalid,
+             deltaytest,
+             name
+             ):
+    #绘制总的预测图
+    allplots(trainstep,
+             validstep,
+             teststep,
+             train_y_tensor,
+             valid_y_tensor,
+             test_y_tensor,
+             predictive_y_for_training,
+             predictive_y_for_validing,
+             predictive_y_for_testing,
+             deltaytrain,
+             deltayvalid,
+             deltaytest,
+             train_size,
+             valid_size,
+             )
+   
+    #残差分布图
+    residualsplots(data1=validstep,
+                   data2=deltayvalid
+                   )
+    
+    
+    #箱线图
+    boxplot(deltayvalid,
+            name,
+            )
+    
+    #交叉分布图
+    jointplot(data1=predictive_y_for_testing,
+              data2=valid_y_tensor
+              )
+
+
+# ## 模型
+
+# In[296]:
+
+
+# 定义BP神经网络
+class Net(torch.nn.Module):
+    def __init__(self, n_feature, n_hidden, n_output):
+        super(Net, self).__init__()
+        #定义层
+        self.fc1 = nn.Linear(n_feature, n_hidden)
+        self.relu1 = nn.ReLU() #nn.Linear为线性关系，加上激活函数转为非线性
+        self.fc2 = nn.Linear(n_hidden, n_hidden)
+        self.relu2 = nn.ReLU()
+        self.fc3 = nn.Linear(n_hidden, n_output)
+
+    def forward(self, x):
+        out = self.fc1(x)
+        out = self.relu1(out)
+        out = self.fc2(out)
+        out = self.relu2(out)
+        out = self.fc3(out)
+        return out
+
+
+# In[297]:
+
+
+# 定义RNN神经网络
+class RNNnet(nn.Module):
+    def __init__(self,input_size,hidden_size,num_layers,n_output):
+        super(RNNnet, self).__init__()
+        self.rnn = nn.RNN(
+        input_size,
+        hidden_size, 
+        num_layers, 
+        batch_first=True,
+        )
+        self.out = nn.Linear(hidden_size, n_output)
+    def forward(self, x, h_state):
+         # x (batch, time_step, input_size)
+         # h_state (n_layers, batch, hidden_size)
+         # r_out (batch, time_step, hidden_size)
+        r_out, h_state = self.rnn(x, h_state)
+        outs = [] # 保存所有的预测值
+        for time_step in range(r_out.size(1)): # 计算每一步长的预测值
+            outs.append(self.out(r_out[:, time_step, :]))
+        return torch.stack(outs, dim=1), h_state
+
+
+# In[298]:
+
+
+# 定义RNN神经网络
+class GRUnet(nn.Module):
+    def __init__(self,input_size,hidden_size,num_layers,n_output):
+        super(GRUnet, self).__init__()
+        self.rnn = nn.GRU(
+        input_size,
+        hidden_size, 
+        num_layers, 
+        batch_first=True,
+        )
+        self.out = nn.Linear(hidden_size, n_output)
+    def forward(self, x, h_state):
+         # x (batch, time_step, input_size)
+         # h_state (n_layers, batch, hidden_size)
+         # r_out (batch, time_step, hidden_size)
+        r_out, h_state = self.rnn(x, h_state)
+        outs = [] # 保存所有的预测值
+        for time_step in range(r_out.size(1)): # 计算每一步长的预测值
+            outs.append(self.out(r_out[:, time_step, :]))
+        return torch.stack(outs, dim=1), h_state
+
+
+# In[299]:
 
 
 #解决中文显示问题
@@ -1071,46 +1068,19 @@ plt.rcParams['axes.unicode_minus'] = False
 plt.rcParams['axes.unicode_minus']=False
 
 
-# In[ ]:
+# In[300]:
 
 
-def ANN(epoches=500,
+def ANN(epoches=100,
         LR=0.003,
-        MLP_trainX=MLP_trainX,
-        train_y=train_y,
-        MLP_validX=MLP_validX,
-        valid_y=valid_y,
-        MLP_testX=MLP_testX,
-        test_y=test_y
-        ):
+        train_x_tensor=train_x_tensor,
+        train_y_tensor=train_y_tensor,
+        valid_x_tensor=valid_x_tensor,
+        valid_y_tensor=valid_y_tensor,
+        test_x_tensor=test_x_tensor,
+        test_y_tensor=test_y_tensor,
+       ):
     
-    # 定义BP神经网络
-    class Net(torch.nn.Module):
-        def __init__(self, n_feature, n_hidden, n_output):
-            super(Net, self).__init__()
-            #定义层
-            self.fc1 = nn.Linear(n_feature, n_hidden)
-            self.relu1 = nn.ReLU() #nn.Linear为线性关系，加上激活函数转为非线性
-            self.fc2 = nn.Linear(n_hidden, n_hidden)
-            self.relu2 = nn.ReLU()
-            self.fc3 = nn.Linear(n_hidden, n_output)
-
-        def forward(self, x):
-            out = self.fc1(x)
-            out = self.relu1(out)
-            out = self.fc2(out)
-            out = self.relu2(out)
-            out = self.fc3(out)
-            return out
-
-    #data变tensor
-    train_x_tensor,train_y_tensor,valid_x_tensor,valid_y_tensor,test_x_tensor,test_y_tensor=data2tensor()
-    
-    #对train、valid、test计算长度
-    trainstep=np.linspace(0, train_size, train_size, dtype=np.float32)
-    validstep=np.linspace(train_size,train_size+len(valid),len(valid)-sw_width-n_out,dtype=np.float32)
-    teststep=np.linspace(train_size+valid_size,train_size+valid_size+len(test),len(test)-sw_width-n_out,dtype=np.float32)
-
     #model建立
     NN_Model = Net(n_feature=n_input, n_hidden=200, n_output=train_y.shape[1])
     optimizer = torch.optim.Adam(NN_Model.parameters(), lr=LR)
@@ -1168,7 +1138,7 @@ def ANN(epoches=500,
                  totall
                  )
     
-    #train好的model进行测试    
+    #model测试    
     
     #train段
     predictive_y_for_trainingo = NN_Model(train_x_tensor)
@@ -1205,95 +1175,38 @@ def ANN(epoches=500,
     print("ValidLoss:{:4f}".format(validloss))    
     print("TestLoss:{:4f}".format(testloss)) 
 
-    #绘制总的预测图
-    allplots(trainstep,
-             validstep,
-             teststep,
-             train_y_tensor,
-             valid_y_tensor,
-             test_y_tensor,
-             predictive_y_for_training,
+    allfigues(predictive_y_for_training,
              predictive_y_for_validing,
              predictive_y_for_testing,
              deltaytrain,
              deltayvalid,
              deltaytest,
-             train_size,
-             valid_size,
-             )
-   
-    #残差分布图
-    residualsplots(data1=validstep,
-                   data2=deltayvalid
-                   )
-    
-    
-    #箱线图
-    boxplot(deltayvalid,
-            'ANN',
-            )
-    
-    #交叉分布图
-    jointplot(data1=predictive_y_for_testing,
-              data2=test_y_tensor
-              )
-    
-    
+             name='ANN')
 
 
-# In[ ]:
+# In[301]:
 
 
-ANN(epoches=100,LR=0.004)
-
-
-# ## 循环神经网络simple RNN
-
-# In[ ]:
-
-
-def RNN(epoches=500,
+def RNN_fit(name,
+        epoches=200,
         LR=0.0005,
-        train_x=MLP_trainX,
-        train_y=train_y,
-        test_x=MLP_testX,
-        test_y=test_y
+        train_x_tensor=train_x_tensor,
+        train_y_tensor=train_y_tensor,
+        valid_x_tensor=valid_x_tensor,
+        valid_y_tensor=valid_y_tensor,
+        test_x_tensor=test_x_tensor,
+        test_y_tensor=test_y_tensor,
         ):
-    
-    # 定义RNN神经网络
-    class RNN(nn.Module):
-        def __init__(self):
-            super(RNN, self).__init__()
-            self.rnn = nn.RNN(
-            input_size=n_input,
-            hidden_size=200, 
-            num_layers=3, 
-            batch_first=True,
-            )
-            self.out = nn.Linear(200, 7)
-        def forward(self, x, h_state):
-             # x (batch, time_step, input_size)
-             # h_state (n_layers, batch, hidden_size)
-             # r_out (batch, time_step, hidden_size)
-            r_out, h_state = self.rnn(x, h_state)
-            outs = [] # 保存所有的预测值
-            for time_step in range(r_out.size(1)): # 计算每一步长的预测值
-                outs.append(self.out(r_out[:, time_step, :]))
-            return torch.stack(outs, dim=1), h_state
 
-    
     h_state=None
-    
-        #data变tensor
-    train_x_tensor,train_y_tensor,valid_x_tensor,valid_y_tensor,test_x_tensor,test_y_tensor=data2tensor()
-    
-    #对train、valid、test计算长度
-    trainstep=np.linspace(0, train_size, train_size, dtype=np.float32)
-    validstep=np.linspace(train_size,train_size+len(valid),len(valid)-sw_width-n_out,dtype=np.float32)
-    teststep=np.linspace(train_size+valid_size,train_size+valid_size+len(test),len(test)-sw_width-n_out,dtype=np.float32)
 
-    #model建立
-    NN_Model = RNN().to(DEVICE)
+    #model建立    
+
+    if name == 'simple RNN':
+        NN_Model = RNNnet(input_size=n_input, hidden_size=200, num_layers=3,n_output=train_y.shape[1])
+    elif name == 'GRU':
+        NN_Model = GRUnet(input_size=n_input, hidden_size=200, num_layers=3,n_output=train_y.shape[1])
+        
     optimizer = torch.optim.Adam(NN_Model.parameters(),lr=LR)   # Adam优化，几乎不用调参
     print('RNN model:', NN_Model)
     print('model.parameters:', NN_Model.parameters) 
@@ -1353,7 +1266,7 @@ def RNN(epoches=500,
                  totall
                  )
     
-    #train好的model进行测试    
+    #model测试    
     #train段
     predictive_y_for_trainingo,h_state_train = NN_Model(train_x_tensor,h_state)
     
@@ -1388,1046 +1301,40 @@ def RNN(epoches=500,
     print("TestLoss:{:4f}".format(testloss)) 
 
     #绘制总的预测图
-    allplots(trainstep,
-             validstep,
-             teststep,
-             train_y_tensor,
-             valid_y_tensor,
-             test_y_tensor,
-             predictive_y_for_training,
+    allfigues(predictive_y_for_training,
              predictive_y_for_validing,
              predictive_y_for_testing,
              deltaytrain,
              deltayvalid,
              deltaytest,
-             train_size,
-             valid_size,
-             )
-   
-    #残差分布图
-    residualsplots(data1=validstep,
-                   data2=deltayvalid
-                   )
-    
-    
-    #箱线图
-    boxplot(deltayvalid,
-            'RNN',
-            )
-    
-    #交叉分布图
-    jointplot(data1=predictive_y_for_testing,
-              data2=valid_y_tensor
-              )
+             name)
 
 
-# In[ ]:
+# In[271]:
 
 
-# RNN()
+ANN(epoches=100,LR=0.004)
 
 
-# ## 长短期记忆LSTM
+# In[229]:
 
-# In[ ]:
 
+RNN_fit('simple RNN',
+        epoches=130,
+        LR=0.004)
 
-def LSTM(epoches=300,
-         LR=0.003,
-         train_x=MLP_trainX,
-         train_y=train_y,
-         test_x=MLP_testX,
-         test_y=test_y
-         ):
-    # Define LSTM Neural Networks
-    class LstmRNN(nn.Module):
-        """
-            Parameters：
-            - input_size: feature size
-            - hidden_size: number of hidden units
-            - output_size: number of output
-            - num_layers: layers of LSTM to stack
-        """
-        def __init__(self, input_size, hidden_size=1, output_size=train_y.shape[1], num_layers=1):
-            super().__init__()
 
-            self.lstm = nn.LSTM(input_size=n_input, hidden_size=200, num_layers=3,batch_first=True) # utilize the LSTM model in torch.nn 
-            self.forwardCalculation = nn.Linear(hidden_size, output_size)
+# In[227]:
 
-        def forward(self, x, h_state, c_state):
-            x, (h_state,c_state) = self.lstm(x, (h_state,c_state))  # _x is input, size (seq_len, batch, input_size)
-            s, b, h = x.shape  # x is output, size (seq_len, batch, hidden_size)
-            x = x.view(s*b, h)
-            x = self.forwardCalculation(x)
-            x = x.view(s, b, -1)
-            return x ,h_state ,c_state
 
-        
-    #data变tensor
-    train_x_tensor,train_y_tensor,valid_x_tensor,valid_y_tensor,test_x_tensor,test_y_tensor=data2tensor()
-    
-    #对train、valid、test计算长度
-    trainstep=np.linspace(0, train_size, train_size, dtype=np.float32)
-    validstep=np.linspace(train_size,train_size+len(valid),len(valid)-sw_width-n_out,dtype=np.float32)
-    teststep=np.linspace(train_size+valid_size,train_size+valid_size+len(test),len(test)-sw_width-n_out,dtype=np.float32)
-
-    #model建立
-    NN_Model = LstmRNN(np.size(train_y,1), 200, output_size=np.size(train_y,1), num_layers=3) # 64 hidden units
-    optimizer = torch.optim.Adam(NN_Model.parameters(), lr=LR)
-    print('LSTM model:', NN_Model)
-    print('model.parameters:', NN_Model.parameters)
-    
-    #model训练
-    loss_function = nn.MSELoss()
-    max_epochs = epoches
-    trainl=[]
-    validl=[]
-    totall=[]
-
-    h_state=torch.zeros([3,1,200],dtype=torch.float)
-    c_state=torch.zeros([3,1,200],dtype=torch.float)
-    
-    for epoch in range(max_epochs):
-        
-
-
-        output,h_state,c_state = NN_Model(train_x_tensor,h_state,c_state)
-        loss = loss_function(output, train_y_tensor)
-        h_state = h_state.data
-        h_state_valid=h_state
-        c_state = c_state.data
-        c_state_valid=c_state
-
-        loss.backward()
-        optimizer.step()
-        optimizer.zero_grad()
-
-        if (epoch+1)%10==0: #每训练10个批次可视化一下效果，并打印一下loss
-            print("Train:")
-            plt.plot(trainstep, train_y.flatten(),color='deepskyblue')
-            plt.plot(trainstep[sw_width:], output.data.numpy().flatten()[sw_width:],color='aquamarine')
-            plt.draw()
-            plt.pause(0.01)
-            print("valid:")
-            plt.plot(validstep,torch.tensor(valid_y).to(torch.float32).flatten(),color='deepskyblue')
-            plt.plot(validstep,predictive_y_for_validing,color='aquamarine')
-            plt.pause(0.01)
-
-        #train loss
-        predictive_y_for_trainingo,h_state_train,c_state_train=NN_Model(train_x_tensor,h_state,c_state)
-        trainloss=loss_function(predictive_y_for_trainingo,train_y_tensor)
-        
-        #valid loss
-        NN_valid_model = NN_Model.eval() # switch to validing model
-        predictive_y_for_validingo,h_state_valid,c_state_valid         = NN_valid_model(valid_x_tensor,h_state_valid,c_state_valid)
-        
-        predictive_y_for_validing = predictive_y_for_validingo.view(-1, 1).data.numpy()
-        
-        validloss=loss_function(predictive_y_for_validingo, valid_y_tensor)
-        
-        totalloss=trainloss+validloss
-        print('Epoch [{}/{}],trainloss: {:.4f},validloss: {:.4f},totalloss: {:.4f}'.format(epoch+1,max_epochs,trainloss,validloss,totalloss))
-        trainl.append(trainloss.item())
-        validl.append(validloss.item())
-        totall.append(totalloss.item())
-
-        
-    #损失下降图
-    lossdecrease(trainl,
-                 validl,
-                 totall
-                 )
-    
-    #train好的model进行测试    
-    #train段
-    predictive_y_for_trainingo,h_state_train,c_state_train = NN_Model(train_x_tensor,h_state,c_state)
-    
-    predictive_y_for_training = predictive_y_for_trainingo.view(-1, 1).data.numpy()
-    #vaild段
-    NN_valid_model = NN_Model.eval() # switch to validing model
-    predictive_y_for_validingo,h_state_valid,c_state_valid = NN_valid_model(valid_x_tensor,h_state,c_state)
-    
-    predictive_y_for_validing = predictive_y_for_validingo.view(-1, 1).data.numpy()  
-    #test段
-    NN_test_model = NN_Model.eval() # switch to testing model
-    predictive_y_for_testingo,h_state_test,c_state_test = NN_test_model(test_x_tensor,h_state,c_state)
-    
-    predictive_y_for_testing = predictive_y_for_testingo.view(-1, 1).data.numpy()
-    
-    #残差计算
-    deltaytrain,deltayvalid,deltaytest=residcount(predictive_y_for_training,
-               predictive_y_for_validing,
-               predictive_y_for_testing,
-               train_y_tensor,
-               valid_y_tensor,
-               test_y_tensor
-               )
-    
-    #计算Loss并打印
-    trainloss=loss_function(predictive_y_for_trainingo, train_y_tensor)    
-    validloss=loss_function(predictive_y_for_validingo, valid_y_tensor)    
-    testloss=loss_function(predictive_y_for_testingo, test_y_tensor)
-    
-    print("TrainLoss:{:4f}".format(trainloss))    
-    print("ValidLoss:{:4f}".format(validloss))    
-    print("TestLoss:{:4f}".format(testloss)) 
-
-    #绘制总的预测图
-    allplots(trainstep,
-             validstep,
-             teststep,
-             train_y_tensor,
-             valid_y_tensor,
-             test_y_tensor,
-             predictive_y_for_training,
-             predictive_y_for_validing,
-             predictive_y_for_testing,
-             deltaytrain,
-             deltayvalid,
-             deltaytest,
-             train_size,
-             valid_size,
-             )
-   
-    #残差分布图
-    residualsplots(data1=validstep,
-                   data2=deltayvalid
-                   )
-    
-    
-    #箱线图
-    boxplot(deltayvalid,
-            'LSTM',
-            )
-    
-    #交叉分布图
-    jointplot(data1=predictive_y_for_testing,
-              data2=valid_y_tensor
-              )
-
-
-# In[ ]:
-
-
-def OLDLSTM(epoches=500,
-         LR=0.00045,
-         train_x=MLP_trainX,
-         train_y=train_y,
-         test_x=MLP_testX,
-         test_y=test_y
-         ):
-    # Define LSTM Neural Networks
-    class LstmRNN(nn.Module):
-        """
-            Parameters：
-            - input_size: feature size
-            - hidden_size: number of hidden units
-            - output_size: number of output
-            - num_layers: layers of LSTM to stack
-        """
-        def __init__(self, input_size, hidden_size=1, output_size=train_y.shape[1], num_layers=1):
-            super().__init__()
-
-            self.lstm = nn.LSTM(input_size=n_input, hidden_size=200, num_layers=3,batch_first=True) # utilize the LSTM model in torch.nn 
-            self.forwardCalculation = nn.Linear(hidden_size, output_size)
-
-        def forward(self, _x):
-            x, _ = self.lstm(_x)  # _x is input, size (seq_len, batch, input_size)
-            s, b, h = x.shape  # x is output, size (seq_len, batch, hidden_size)
-            x = x.view(s*b, h)
-            x = self.forwardCalculation(x)
-            x = x.view(s, b, -1)
-            return x
-
-        
-    #data变tensor
-    train_x_tensor,train_y_tensor,valid_x_tensor,valid_y_tensor,test_x_tensor,test_y_tensor=data2tensor()
-    
-    #对train、valid、test计算长度
-    trainstep=np.linspace(0, train_size, train_size, dtype=np.float32)
-    validstep=np.linspace(train_size,train_size+len(valid),len(valid)-sw_width-n_out,dtype=np.float32)
-    teststep=np.linspace(train_size+valid_size,train_size+valid_size+len(test),len(test)-sw_width-n_out,dtype=np.float32)
-
-    #model建立
-    NN_Model = LstmRNN(np.size(train_y,1), 200, output_size=np.size(train_y,1), num_layers=3) # 64 hidden units
-    optimizer = torch.optim.Adam(NN_Model.parameters(), lr=LR)
-    print('LSTM model:', NN_Model)
-    print('model.parameters:', NN_Model.parameters)
-    
-    #model训练
-    loss_function = nn.MSELoss()
-    max_epochs = epoches
-    trainl=[]
-    validl=[]
-    totall=[]
-
-    for epoch in range(max_epochs):
-
-        output = NN_Model(train_x_tensor)
-        loss = loss_function(output, train_y_tensor)
-
-        loss.backward()
-        optimizer.step()
-        optimizer.zero_grad()
-
-        if (epoch+1)%10==0: #每训练10个批次可视化一下效果，并打印一下loss
-            print("Train:")
-            plt.plot(trainstep, train_y.flatten(),color='deepskyblue')
-            plt.plot(trainstep[sw_width:], output.data.numpy().flatten()[sw_width:],color='aquamarine')
-            plt.draw()
-            plt.pause(0.01)
-            print("valid:")
-            plt.plot(validstep,torch.tensor(valid_y).to(torch.float32).flatten(),color='deepskyblue')
-            plt.plot(validstep,predictive_y_for_validing,color='aquamarine')
-            plt.pause(0.01)
-
-        #train loss
-        predictive_y_for_trainingo=NN_Model(train_x_tensor)
-        trainloss=loss_function(predictive_y_for_trainingo,train_y_tensor)
-        
-        #valid loss
-        NN_valid_model = NN_Model.eval() # switch to validing model
-        predictive_y_for_validingo = NN_valid_model(valid_x_tensor)
-        predictive_y_for_validing = predictive_y_for_validingo.view(-1, 1).data.numpy()
-        
-        validloss=loss_function(predictive_y_for_validingo, valid_y_tensor)
-        
-        totalloss=trainloss+validloss
-        print('Epoch [{}/{}],trainloss: {:.4f},validloss: {:.4f},totalloss: {:.4f}'.format(epoch+1,max_epochs,trainloss,validloss,totalloss))
-        trainl.append(trainloss.item())
-        validl.append(validloss.item())
-        totall.append(totalloss.item())
-
-        
-    #损失下降图
-    lossdecrease(trainl,
-                 validl,
-                 totall
-                 )
-    
-    #train好的model进行测试    
-    #train段
-    predictive_y_for_trainingo = NN_Model(train_x_tensor)
-    
-    predictive_y_for_training = predictive_y_for_trainingo.view(-1, 1).data.numpy()
-    #vaild段
-    NN_valid_model = NN_Model.eval() # switch to validing model
-    predictive_y_for_validingo = NN_valid_model(valid_x_tensor)
-    
-    predictive_y_for_validing = predictive_y_for_validingo.view(-1, 1).data.numpy()  
-    #test段
-    NN_test_model = NN_Model.eval() # switch to testing model
-    predictive_y_for_testingo = NN_test_model(test_x_tensor)
-    
-    predictive_y_for_testing = predictive_y_for_testingo.view(-1, 1).data.numpy()
-    
-    #残差计算
-    deltaytrain,deltayvalid,deltaytest=residcount(predictive_y_for_training,
-               predictive_y_for_validing,
-               predictive_y_for_testing,
-               train_y_tensor,
-               valid_y_tensor,
-               test_y_tensor
-               )
-    
-    #计算Loss并打印
-    trainloss=loss_function(predictive_y_for_trainingo, train_y_tensor)    
-    validloss=loss_function(predictive_y_for_validingo, valid_y_tensor)    
-    testloss=loss_function(predictive_y_for_testingo, test_y_tensor)
-    
-    print("TrainLoss:{:4f}".format(trainloss))    
-    print("ValidLoss:{:4f}".format(validloss))    
-    print("TestLoss:{:4f}".format(testloss)) 
-
-    #绘制总的预测图
-    allplots(trainstep,
-             validstep,
-             teststep,
-             train_y_tensor,
-             valid_y_tensor,
-             test_y_tensor,
-             predictive_y_for_training,
-             predictive_y_for_validing,
-             predictive_y_for_testing,
-             deltaytrain,
-             deltayvalid,
-             deltaytest,
-             train_size,
-             valid_size,
-             )
-   
-    #残差分布图
-    residualsplots(data1=validstep,
-                   data2=deltayvalid
-                   )
-    
-    
-    #箱线图
-    boxplot(deltayvalid,
-            'LSTM',
-            )
-    
-    #交叉分布图
-    jointplot(data1=predictive_y_for_validing,
-              data2=valid_y_tensor
-              )
-
-
-# In[ ]:
-
-
-# LSTM()
-
-
-# ## 门控神经单元GRU
-
-# In[ ]:
-
-
-def NEWGru(epoches=300,
-        LR=0.0006,
-        MLP_trainX=MLP_trainX,
-        train_y=train_y,
-        MLP_validX=MLP_validX,
-        valid_y=valid_y,
-        MLP_testX=MLP_testX,
-        test_y=test_y
-        ):
-    # Define LSTM Neural Networks
-    class LstmRNN(nn.Module):
-        """
-            Parameters：
-            - input_size: feature size
-            - hidden_size: number of hidden units
-            - output_size: number of output
-            - num_layers: layers of LSTM to stack
-        """
-        def __init__(self, input_size, hidden_size=1, output_size=train_y.shape[1], num_layers=1):
-            super().__init__()
-
-            self.lstm =nn.GRU(input_size=n_input, hidden_size=400, num_layers=3,batch_first=True)
-            # utilize the LSTM model in torch.nn 
-            self.forwardCalculation = nn.Linear(hidden_size, output_size)
-
-        def forward(self, x, h_state, c_state):
-            x, (h_state,c_state) = self.lstm(x, (h_state,c_state))  # _x is input, size (seq_len, batch, input_size)
-            s, b, h = x.shape  # x is output, size (seq_len, batch, hidden_size)
-            x = x.view(s*b, h)
-            x = self.forwardCalculation(x)
-            x = x.view(s, b, -1)
-            return x ,h_state ,c_state
-
-        
-    #data变tensor
-    train_x_tensor,train_y_tensor,valid_x_tensor,valid_y_tensor,test_x_tensor,test_y_tensor=data2tensor(MLP_trainX=MLP_trainX,
-                                                                                                        train_y=train_y,
-                                                                                                        MLP_validX=MLP_validX,
-                                                                                                        valid_y=valid_y,
-                                                                                                        MLP_testX=MLP_testX,
-                                                                                                        test_y=test_y
-                                                                                                        )
-    
-    #对train、valid、test计算长度
-    trainstep=np.linspace(0, train_size, train_size, dtype=np.float32)
-    validstep=np.linspace(train_size,train_size+len(valid),len(valid)-sw_width-n_out,dtype=np.float32)
-    teststep=np.linspace(train_size+valid_size,train_size+valid_size+len(test),len(test)-sw_width-n_out,dtype=np.float32)
-
-    #model建立
-    NN_Model = LstmRNN(np.size(train_y,1), 400, output_size=np.size(train_y,1), num_layers=3) # 64 hidden units
-    optimizer = torch.optim.Adam(NN_Model.parameters(), lr=LR)
-    print('LSTM model:', NN_Model)
-    print('model.parameters:', NN_Model.parameters)
-    
-    #model训练
-    loss_function = nn.MSELoss()
-    max_epochs = epoches
-    trainl=[]
-    validl=[]
-    totall=[]
-
-    for epoch in range(max_epochs):
-        
-        h_state=torch.zeros([3,1,400],dtype=torch.float)
-        c_state=torch.zeros([3,1,400],dtype=torch.float)
-
-        output,h_state,c_state = NN_Model(train_x_tensor,h_state,c_state)
-        loss = loss_function(output, train_y_tensor)
-        h_state = h_state.data
-        h_state_valid=h_state
-        c_state = c_state.data
-        c_state_valid=c_state
-
-        loss.backward()
-        optimizer.step()
-        optimizer.zero_grad()
-
-        if (epoch+1)%10==0: #每训练10个批次可视化一下效果，并打印一下loss
-            print("Train:")
-            plt.plot(trainstep, train_y.flatten(),color='deepskyblue')
-            plt.plot(trainstep[sw_width:], output.data.numpy().flatten()[sw_width:],color='aquamarine')
-            plt.draw()
-            plt.pause(0.01)
-            print("valid:")
-            plt.plot(validstep,torch.tensor(valid_y).to(torch.float32).flatten(),color='deepskyblue')
-            plt.plot(validstep,predictive_y_for_validing,color='aquamarine')
-            plt.pause(0.01)
-
-        #train loss
-        predictive_y_for_trainingo,h_state_train,c_state_train=NN_Model(train_x_tensor,h_state,c_state)
-        trainloss=loss_function(predictive_y_for_trainingo,train_y_tensor)
-        
-        #valid loss
-        NN_valid_model = NN_Model.eval() # switch to validing model
-        predictive_y_for_validingo,h_state_valid,c_state_valid         = NN_valid_model(valid_x_tensor,h_state_valid,c_state_valid)
-        
-        predictive_y_for_validing = predictive_y_for_validingo.view(-1, 1).data.numpy()
-        
-        validloss=loss_function(predictive_y_for_validingo, valid_y_tensor)
-        
-        totalloss=trainloss+validloss
-        print('Epoch [{}/{}],trainloss: {:.4f},validloss: {:.4f},totalloss: {:.4f}'.format(epoch+1,max_epochs,trainloss,validloss,totalloss))
-        trainl.append(trainloss.item())
-        validl.append(validloss.item())
-        totall.append(totalloss.item())
-
-        
-    #损失下降图
-    lossdecrease(trainl,
-                 validl,
-                 totall
-                 )
-    
-    #train好的model进行测试    
-    #train段
-    predictive_y_for_trainingo,h_state_train,c_state_train = NN_Model(train_x_tensor,h_state,c_state)
-    
-    predictive_y_for_training = predictive_y_for_trainingo.view(-1, 1).data.numpy()
-    #vaild段
-    NN_valid_model = NN_Model.eval() # switch to validing model
-    predictive_y_for_validingo,h_state_valid,c_state_valid = NN_valid_model(valid_x_tensor,h_state,c_state)
-    
-    predictive_y_for_validing = predictive_y_for_validingo.view(-1, 1).data.numpy()  
-    #test段
-    NN_test_model = NN_Model.eval() # switch to testing model
-    predictive_y_for_testingo,h_state_test,c_state_test = NN_test_model(test_x_tensor,h_state,c_state)
-    
-    predictive_y_for_testing = predictive_y_for_testingo.view(-1, 1).data.numpy()
-    
-    #残差计算
-    deltaytrain,deltayvalid,deltaytest=residcount(predictive_y_for_training,
-               predictive_y_for_validing,
-               predictive_y_for_testing,
-               train_y_tensor,
-               valid_y_tensor,
-               test_y_tensor
-               )
-    
-    #计算Loss并打印
-    trainloss=loss_function(predictive_y_for_trainingo, train_y_tensor)    
-    validloss=loss_function(predictive_y_for_validingo, valid_y_tensor)    
-    testloss=loss_function(predictive_y_for_testingo, test_y_tensor)
-    
-    print("TrainLoss:{:4f}".format(trainloss))    
-    print("ValidLoss:{:4f}".format(validloss))    
-    print("TestLoss:{:4f}".format(testloss)) 
-
-    #绘制总的预测图
-    allplots(trainstep,
-             validstep,
-             teststep,
-             train_y_tensor,
-             valid_y_tensor,
-             test_y_tensor,
-             predictive_y_for_training,
-             predictive_y_for_validing,
-             predictive_y_for_testing,
-             deltaytrain,
-             deltayvalid,
-             deltaytest,
-             train_size,
-             valid_size,
-             )
-   
-    #残差分布图
-    residualsplots(data1=validstep,
-                   data2=deltayvalid
-                   )
-    
-    
-    #箱线图
-    boxplot(deltayvalid,
-            'LSTM',
-            )
-    
-    #交叉分布图
-    jointplot(data1=predictive_y_for_testing,
-              data2=valid_y_tensor
-              )
-
-
-# In[ ]:
-
-
-def Gru(epoches=300,
-        LR=0.0006,
-        MLP_trainX=MLP_trainX,
-        train_y=train_y,
-        MLP_validX=MLP_validX,
-        valid_y=valid_y,
-        MLP_testX=MLP_testX,
-        test_y=test_y
-        ):
-    # Define LSTM Neural Networks
-    class LstmRNN(nn.Module):
-        """
-            Parameters：
-            - input_size: feature size
-            - hidden_size: number of hidden units
-            - output_size: number of output
-            - num_layers: layers of LSTM to stack
-        """
-
-        def __init__(self, input_size, hidden_size=1, output_size=train_y.shape[1], num_layers=1):
-            super().__init__()
-
-            self.gru = nn.GRU(input_size=n_input, hidden_size=hidden_size, num_layers=num_layers,batch_first=True)
-            self.fc = nn.Linear(hidden_size, output_size)
-            #self.dropout = nn.Dropout(p=0.1)
-
-        def forward(self, x, h_state):
-            r_out, h_state = self.gru(x)
-            outs = [] # 保存所有的预测值
-            for time_step in range(r_out.size(1)): # 计算每一步长的预测值
-                outs.append(self.fc(r_out[:, time_step, :]))
-            return torch.stack(outs, dim=1), h_state
-
-    #h_state=None
-        
-    #data变tensor
-    train_x_tensor,train_y_tensor,valid_x_tensor,valid_y_tensor,test_x_tensor,test_y_tensor=data2tensor(MLP_trainX=MLP_trainX,
-                                                                                                        train_y=train_y,
-                                                                                                        MLP_validX=MLP_validX,
-                                                                                                        valid_y=valid_y,
-                                                                                                        MLP_testX=MLP_testX,
-                                                                                                        test_y=test_y
-                                                                                                        )
-    
-    #对train、valid、test计算长度
-    trainstep=np.linspace(0, train_size, train_size, dtype=np.float32)
-    validstep=np.linspace(train_size,train_size+len(valid),len(valid)-sw_width-n_out,dtype=np.float32)
-    teststep=np.linspace(train_size+valid_size,train_size+valid_size+len(test),len(test)-sw_width-n_out,dtype=np.float32)
-
-    #model建立
-    NN_Model = LstmRNN(np.size(train_y,1), 200, output_size=np.size(train_y,1), num_layers=3).to(DEVICE) # 64 hidden units
-    optimizer = torch.optim.Adam(NN_Model.parameters(), lr=LR)
-    print('GRU model:', NN_Model)
-    print('model.parameters:', NN_Model.parameters)
-
-    
-    #model训练
-    loss_function = nn.MSELoss()
-    max_epochs = epoches
-    trainl=[]
-    validl=[]
-    totall=[]
-    NN_Model.train
-    
-    for epoch in range(max_epochs):
-        h_state=None
-        output ,h_state = NN_Model(train_x_tensor,h_state)
-        loss = loss_function(output, train_y_tensor)
-        h_state = h_state.data
-        h_state_valid=h_state
-        
-        loss.backward()
-        optimizer.step()
-        optimizer.zero_grad()
-
-        if (epoch+1)%10==0: #每训练10个批次可视化一下效果，并打印一下loss
-            print("Train:")
-            plt.plot(trainstep, train_y.flatten(),color='deepskyblue')
-            plt.plot(trainstep[sw_width:], output.data.numpy().flatten()[sw_width:],color='aquamarine')
-            plt.draw()
-            plt.pause(0.01)
-            print("valid:")
-            plt.plot(validstep,torch.tensor(valid_y).to(torch.float32).flatten(),color='deepskyblue')
-            plt.plot(validstep,predictive_y_for_validing,color='aquamarine')
-            plt.pause(0.01)
-
-        #train loss
-        predictive_y_for_trainingo,h_state_train=NN_Model(train_x_tensor,h_state)
-        
-        trainloss=loss_function(predictive_y_for_trainingo,train_y_tensor)
-        
-        #valid loss
-        NN_valid_model = NN_Model.eval() # switch to validing model
-        predictive_y_for_validingo ,h_state_valid= NN_valid_model(valid_x_tensor,h_state_valid)
-        predictive_y_for_validing = predictive_y_for_validingo.view(-1, 1).data.numpy()
-        
-        validloss=loss_function(predictive_y_for_validingo, valid_y_tensor)
-        
-        totalloss=trainloss+validloss
-        print('Epoch [{}/{}],trainloss: {:.4f},validloss: {:.4f},totalloss: {:.4f}'.format(epoch+1,max_epochs,trainloss,validloss,totalloss))
-        trainl.append(trainloss.item())
-        validl.append(validloss.item())
-        totall.append(totalloss.item())
-        
-    #损失下降图
-    lossdecrease(trainl,
-                 validl,
-                 totall
-                 )
-    
-    #train好的model进行测试    
-    #train段
-    predictive_y_for_trainingo,h_state_train = NN_Model(train_x_tensor,h_state)
-    
-    predictive_y_for_training = predictive_y_for_trainingo.view(-1, 1).data.numpy()
-    #vaild段
-    NN_valid_model = NN_Model.eval() # switch to validing model
-    predictive_y_for_validingo ,h_state_valid= NN_valid_model(valid_x_tensor,h_state)
-    
-    predictive_y_for_validing = predictive_y_for_validingo.view(-1, 1).data.numpy()  
-    #test段
-    NN_test_model = NN_Model.eval() # switch to testing model
-    predictive_y_for_testingo ,h_state_test= NN_test_model(test_x_tensor,h_state)
-    
-    predictive_y_for_testing = predictive_y_for_testingo.view(-1, 1).data.numpy()
-    
-    #残差计算
-    deltaytrain,deltayvalid,deltaytest=residcount(predictive_y_for_training,
-               predictive_y_for_validing,
-               predictive_y_for_testing,
-               train_y_tensor,
-               valid_y_tensor,
-               test_y_tensor
-               )
-    
-    #计算Loss并打印
-    trainloss=loss_function(predictive_y_for_trainingo, train_y_tensor)    
-    validloss=loss_function(predictive_y_for_validingo, valid_y_tensor)    
-    testloss=loss_function(predictive_y_for_testingo, test_y_tensor)
-    
-    print("TrainLoss:{:4f}".format(trainloss))    
-    print("ValidLoss:{:4f}".format(validloss))    
-    print("TestLoss:{:4f}".format(testloss)) 
-
-    #绘制总的预测图
-    allplots(trainstep,
-             validstep,
-             teststep,
-             train_y_tensor,
-             valid_y_tensor,
-             test_y_tensor,
-             predictive_y_for_training,
-             predictive_y_for_validing,
-             predictive_y_for_testing,
-             deltaytrain,
-             deltayvalid,
-             deltaytest,
-             train_size,
-             valid_size,
-             )
-   
-    #残差分布图
-    residualsplots(data1=validstep,
-                   data2=deltayvalid
-                   )
-    
-    
-    #箱线图
-    boxplot(deltayvalid,
-            'GRU',
-            )
-    
-    #交叉分布图
-    jointplot(data1=predictive_y_for_validing,
-              data2=valid_y_tensor
-              )
-
-
-# In[ ]:
-
-
-# def Gru(epoches=300,
-#         LR=0.0006,
-#         MLP_trainX=MLP_trainX,
-#         train_y=train_y,
-#         MLP_validX=MLP_validX,
-#         valid_y=valid_y,
-#         MLP_testX=MLP_testX,
-#         test_y=test_y
-#         ):
-#     # Define LSTM Neural Networks
-#     class LstmRNN(nn.Module):
-#         """
-#             Parameters：
-#             - input_size: feature size
-#             - hidden_size: number of hidden units
-#             - output_size: number of output
-#             - num_layers: layers of LSTM to stack
-#         """
-
-#         def __init__(self, input_size, hidden_size=1, output_size=train_y.shape[1], num_layers=1):
-#             super().__init__()
-
-#             self.gru = nn.GRU(input_size=n_input, hidden_size=hidden_size, num_layers=num_layers,batch_first=True)
-#             self.fc = nn.Linear(hidden_size, output_size)
-#             #self.dropout = nn.Dropout(p=0.1)
-
-#         def forward(self, x, h_state):
-#             r_out, _ = self.gru(x)
-#             outs = [] # 保存所有的预测值
-#             for time_step in range(r_out.size(1)): # 计算每一步长的预测值
-#                 outs.append(self.fc(r_out[:, time_step, :]))
-# #             s, b, h = x.shape
-# #             x = x.reshape(s * b, h)
-# #             x = self.fc(x)
-# #             x = x.reshape(s, b, -1)
-#             #x = self.dropout(x)
-#             return torch.stack(outs, dim=1) #x
-
-# #                 def forward(self, x, h_state):
-# #              # x (batch, time_step, input_size)
-# #              # h_state (n_layers, batch, hidden_size)
-# #              # r_out (batch, time_step, hidden_size)
-# #             r_out, h_state = self.rnn(x, h_state)
-# #             outs = [] # 保存所有的预测值
-# #             for time_step in range(r_out.size(1)): # 计算每一步长的预测值
-# #                 outs.append(self.fc(r_out[:, time_step, :]))
-# #             return torch.stack(outs, dim=1)
-        
-#     #data变tensor
-#     train_x_tensor,train_y_tensor,valid_x_tensor,valid_y_tensor,test_x_tensor,test_y_tensor=data2tensor(MLP_trainX=MLP_trainX,
-#                                                                                                         train_y=train_y,
-#                                                                                                         MLP_validX=MLP_validX,
-#                                                                                                         valid_y=valid_y,
-#                                                                                                         MLP_testX=MLP_testX,
-#                                                                                                         test_y=test_y
-#                                                                                                         )
-    
-#     #对train、valid、test计算长度
-#     trainstep=np.linspace(0, train_size, train_size, dtype=np.float32)
-#     validstep=np.linspace(train_size,train_size+len(valid),len(valid)-sw_width-n_out,dtype=np.float32)
-#     teststep=np.linspace(train_size+valid_size,train_size+valid_size+len(test),len(test)-sw_width-n_out,dtype=np.float32)
-
-#     #model建立
-#     NN_Model = LstmRNN(np.size(train_y,1), 200, output_size=np.size(train_y,1), num_layers=3) # 64 hidden units
-#     optimizer = torch.optim.Adam(NN_Model.parameters(), lr=LR)
-#     print('GRU model:', NN_Model)
-#     print('model.parameters:', NN_Model.parameters)
-
-    
-#     #model训练
-#     loss_function = nn.MSELoss()
-#     max_epochs = epoches
-#     trainl=[]
-#     validl=[]
-#     totall=[]
-
-#     for epoch in range(max_epochs):
-
-#         output = NN_Model(train_x_tensor)
-#         loss = loss_function(output, train_y_tensor)
-
-#         loss.backward()
-#         optimizer.step()
-#         optimizer.zero_grad()
-
-#         if (epoch+1)%10==0: #每训练10个批次可视化一下效果，并打印一下loss
-#             print("Train:")
-#             plt.plot(trainstep, train_y.flatten(),color='deepskyblue')
-#             plt.plot(trainstep[sw_width:], output.data.numpy().flatten()[sw_width:],color='aquamarine')
-#             plt.draw()
-#             plt.pause(0.01)
-#             print("valid:")
-#             plt.plot(validstep,torch.tensor(valid_y).to(torch.float32).flatten(),color='deepskyblue')
-#             plt.plot(validstep,predictive_y_for_validing,color='aquamarine')
-#             plt.pause(0.01)
-
-#         #train loss
-#         predictive_y_for_trainingo=NN_Model(train_x_tensor)
-#         trainloss=loss_function(predictive_y_for_trainingo,train_y_tensor)
-        
-#         #valid loss
-#         NN_valid_model = NN_Model.eval() # switch to validing model
-#         predictive_y_for_validingo = NN_valid_model(valid_x_tensor)
-#         predictive_y_for_validing = predictive_y_for_validingo.view(-1, 1).data.numpy()
-        
-#         validloss=loss_function(predictive_y_for_validingo, valid_y_tensor)
-        
-#         totalloss=trainloss+validloss
-#         print('Epoch [{}/{}],trainloss: {:.4f},validloss: {:.4f},totalloss: {:.4f}'.format(epoch+1,max_epochs,trainloss,validloss,totalloss))
-#         trainl.append(trainloss.item())
-#         validl.append(validloss.item())
-#         totall.append(totalloss.item())
-
-        
-#     #损失下降图
-#     lossdecrease(trainl,
-#                  validl,
-#                  totall
-#                  )
-    
-#     #train好的model进行测试    
-#     #train段
-#     predictive_y_for_trainingo = NN_Model(train_x_tensor)
-    
-#     predictive_y_for_training = predictive_y_for_trainingo.view(-1, 1).data.numpy()
-#     #vaild段
-#     NN_valid_model = NN_Model.eval() # switch to validing model
-#     predictive_y_for_validingo = NN_valid_model(valid_x_tensor)
-    
-#     predictive_y_for_validing = predictive_y_for_validingo.view(-1, 1).data.numpy()  
-#     #test段
-#     NN_test_model = NN_Model.eval() # switch to testing model
-#     predictive_y_for_testingo = NN_test_model(test_x_tensor)
-    
-#     predictive_y_for_testing = predictive_y_for_testingo.view(-1, 1).data.numpy()
-    
-#     #残差计算
-#     deltaytrain,deltayvalid,deltaytest=residcount(predictive_y_for_training,
-#                predictive_y_for_validing,
-#                predictive_y_for_testing,
-#                train_y_tensor,
-#                valid_y_tensor,
-#                test_y_tensor
-#                )
-    
-#     #计算Loss并打印
-#     trainloss=loss_function(predictive_y_for_trainingo, train_y_tensor)    
-#     validloss=loss_function(predictive_y_for_validingo, valid_y_tensor)    
-#     testloss=loss_function(predictive_y_for_testingo, test_y_tensor)
-    
-#     print("TrainLoss:{:4f}".format(trainloss))    
-#     print("ValidLoss:{:4f}".format(validloss))    
-#     print("TestLoss:{:4f}".format(testloss)) 
-
-#     #绘制总的预测图
-#     allplots(trainstep,
-#              validstep,
-#              teststep,
-#              train_y_tensor,
-#              valid_y_tensor,
-#              test_y_tensor,
-#              predictive_y_for_training,
-#              predictive_y_for_validing,
-#              predictive_y_for_testing,
-#              deltaytrain,
-#              deltayvalid,
-#              deltaytest,
-#              train_size,
-#              valid_size,
-#              )
-   
-#     #残差分布图
-#     residualsplots(data1=validstep,
-#                    data2=deltayvalid
-#                    )
-    
-    
-#     #箱线图
-#     boxplot(deltayvalid,
-#             'GRU',
-#             )
-    
-#     #交叉分布图
-#     jointplot(data1=predictive_y_for_validing,
-#               data2=valid_y_tensor
-#               )
-
-
-# # 模型对比
-
-# ## ANN
-
-# In[ ]:
-
-
-ANN(epoches=200,LR=0.001)
-
-
-# In[ ]:
-
-
-ANN(epoches=150,LR=0.0001)
-
-
-# ## RNN
-
-# In[ ]:
-
-
-RNN(epoches=300,LR=0.0005)
-
-
-# In[ ]:
-
-
-RNN(epoches=150,LR=0.001)
-
-
-# ## LSTM
-
-# In[ ]:
-
-
-# LSTM(epoches=400,LR=0.00648)
-
-
-# In[ ]:
-
-
-# LSTM(epoches=300,LR=0.003)
-
-
-# In[ ]:
-
-
-
-
-
-# ## GRU
-
-# In[ ]:
-
-
-Gru(epoches=140,LR=0.001)
-
-
-# In[ ]:
-
-
-Gru(epoches=160,LR=0.0005)
-
-
-# In[ ]:
-
-
-Gru(epoches=250,LR=0.0004)
-
-
-# In[ ]:
-
-
-Gru(epoches=250,LR=0.0004)
-
-
-# In[ ]:
-
-
-Gru(epoches=200,LR=0.0003)
+RNN_fit('GRU',
+        epoches=130,
+        LR=0.004)
 
 
 # # Attention
 
-# In[ ]:
-
-
-train_x_tensor,train_y_tensor,valid_x_tensor,valid_y_tensor,test_x_tensor,test_y_tensor=data2tensor()
-
-
-# In[ ]:
+# In[276]:
 
 
 class dot_attention(nn.Module):
@@ -2474,59 +1381,59 @@ a=a.repeat(13,0)
 a=a.repeat(train_X.shape[0],0)
 a=a.reshape(-1,13,13)
 
-MLP_trainX=torch.bmm(train_x_tensor.reshape(-1,7,13),torch.tensor(a)).reshape(-1,91)
-MLP_testX=torch.bmm(test_x_tensor.reshape(-1,7,13),torch.tensor(np.mean(attention.numpy(),axis=0).repeat(13,0).repeat(44,0).reshape(-1,13,13))).reshape(-1,91)
-MLP_validX=torch.bmm(valid_x_tensor.reshape(-1,7,13),torch.tensor(np.mean(attention.numpy(),axis=0).repeat(13,0).repeat(44,0).reshape(-1,13,13))).reshape(-1,91)
+MLP_trainX=torch.bmm(train_x_tensor.reshape(-1,7,13),torch.tensor(a)).reshape(-1,91).numpy()
+MLP_testX=torch.bmm(test_x_tensor.reshape(-1,7,13),torch.tensor(np.mean(attention.numpy(),axis=0).repeat(13,0).repeat(44,0).reshape(-1,13,13))).reshape(-1,91).numpy()
+MLP_validX=torch.bmm(valid_x_tensor.reshape(-1,7,13),torch.tensor(np.mean(attention.numpy(),axis=0).repeat(13,0).repeat(44,0).reshape(-1,13,13))).reshape(-1,91).numpy()
 
 
-# ## ANN
-
-# In[ ]:
+# In[277]:
 
 
-ANN(epoches=100,LR=0.004)
+train_x_tensor,train_y_tensor,valid_x_tensor,valid_y_tensor,test_x_tensor,test_y_tensor=data2tensor()
 
 
-# ## RNN
-
-# In[ ]:
+# In[282]:
 
 
-RNN(epoches=190,LR=0.001)
+test_x_tensor
 
 
-# ## GRU
-
-# In[ ]:
+# In[283]:
 
 
-Gru(epoches=100,
-    LR=0.001)
-
-
-# In[ ]:
-
-
-Gru(epoches=300,LR=0.00025)
+ANN(epoches=100,
+    LR=0.001,
+    train_x_tensor=train_x_tensor,
+    train_y_tensor=train_y_tensor,
+    valid_x_tensor=valid_x_tensor,
+    valid_y_tensor=valid_y_tensor,
+    test_x_tensor=test_x_tensor,
+    test_y_tensor=test_y_tensor,
+   )
 
 
 # In[ ]:
 
 
+RNN_fit
 
 
-
-# In[ ]:
-
+# In[245]:
 
 
+train_x_tensor_att
+
+
+# In[246]:
+
+
+train_x_tensor
 
 
 # # 引入噪声
 
 # ## 引入合成噪声
 
-# In[ ]:
 
 
 import numpy as np 
@@ -2594,892 +1501,76 @@ MLP_trainX050, MLP_validX050, MLP_testX050 = datalining(train_X050,
 
 # ## GRU
 
-# ### 5%噪声训练，0%噪声测试
+# In[302]:
+
+
+train_x_tensor005,train_y_tensor,valid_x_tensor,valid_y_tensor,test_x_tensor,test_y_tensor=data2tensor(MLP_trainX=MLP_trainX005,
+                                                                                                    train_y=train_y,
+                                                                                                    MLP_validX=MLP_validX,
+                                                                                                    valid_y=valid_y,
+                                                                                                    MLP_testX=MLP_testX,
+                                                                                                    test_y=test_y
+                                                                                                    )
+
 
 # In[ ]:
 
 
-def Gru(epoches=300,
-        LR=0.0006,
-        ):
-    # Define LSTM Neural Networks
-    class LstmRNN(nn.Module):
-        """
-            Parameters：
-            - input_size: feature size
-            - hidden_size: number of hidden units
-            - output_size: number of output
-            - num_layers: layers of LSTM to stack
-        """
+train_x_tensor005,train_y_tensor,valid_x_tensor010,valid_y_tensor,test_x_tensor010,test_y_tensor=data2tensor(MLP_trainX=MLP_trainX005,
+                                                                                                            train_y=train_y,
+                                                                                                            MLP_validX=MLP_validX010,
+                                                                                                            valid_y=valid_y,
+                                                                                                            MLP_testX=MLP_testX010,
+                                                                                                            test_y=test_y
+                                                                                                            )
 
-        def __init__(self, input_size, hidden_size=1, output_size=train_y.shape[1], num_layers=1):
-            super().__init__()
-
-            self.gru = nn.GRU(input_size=n_input, hidden_size=200, num_layers=3,batch_first=True)
-            self.fc = nn.Linear(hidden_size, output_size)
-            #self.dropout = nn.Dropout(p=0.1)
-
-        def forward(self, _x):
-            x, _ = self.gru(_x)
-            s, b, h = x.shape
-            x = x.reshape(s * b, h)
-            x = self.fc(x)
-            x = x.reshape(s, b, -1)
-            #x = self.dropout(x)
-            return x
-    
-    #data变tensor
-    train_x_tensor,train_y_tensor,valid_x_tensor,valid_y_tensor,test_x_tensor,test_y_tensor=data2tensor(MLP_trainX=MLP_trainX005,
-                                                                                                        train_y=train_y,
-                                                                                                        MLP_validX=MLP_validX,
-                                                                                                        valid_y=valid_y,
-                                                                                                        MLP_testX=MLP_testX,
-                                                                                                        test_y=test_y
-                                                                                                        )
-    
-    #对train、valid、test计算长度
-    trainstep=np.linspace(0, train_size, train_size, dtype=np.float32)
-    validstep=np.linspace(train_size,train_size+len(valid),len(valid)-sw_width-n_out,dtype=np.float32)
-    teststep=np.linspace(train_size+valid_size,train_size+valid_size+len(test),len(test)-sw_width-n_out,dtype=np.float32)
-
-    #model建立
-    NN_Model = LstmRNN(np.size(train_y,1), 200, output_size=np.size(train_y,1), num_layers=3) # 64 hidden units
-    optimizer = torch.optim.Adam(NN_Model.parameters(), lr=LR)
-    print('GRU model:', NN_Model)
-    print('model.parameters:', NN_Model.parameters)
-
-    
-    #model训练
-    loss_function = nn.MSELoss()
-    max_epochs = epoches
-    trainl=[]
-    validl=[]
-    totall=[]
-
-    for epoch in range(max_epochs):
-
-        output = NN_Model(train_x_tensor)
-        loss = loss_function(output, train_y_tensor)
-
-        loss.backward()
-        optimizer.step()
-        optimizer.zero_grad()
-
-        if (epoch+1)%10==0: #每训练10个批次可视化一下效果，并打印一下loss
-            print("Train:")
-            plt.plot(trainstep, train_y.flatten(),color='deepskyblue')
-            plt.plot(trainstep[sw_width:], output.data.numpy().flatten()[sw_width:],color='aquamarine')
-            plt.draw()
-            plt.pause(0.01)
-            print("valid:")
-            plt.plot(validstep,torch.tensor(valid_y).to(torch.float32).flatten(),color='deepskyblue')
-            plt.plot(validstep,predictive_y_for_validing,color='aquamarine')
-            plt.pause(0.01)
-
-        #train loss
-        predictive_y_for_trainingo=NN_Model(train_x_tensor)
-        trainloss=loss_function(predictive_y_for_trainingo,train_y_tensor)
-        
-        #valid loss
-        NN_valid_model = NN_Model.eval() # switch to validing model
-        predictive_y_for_validingo = NN_valid_model(valid_x_tensor)
-        predictive_y_for_validing = predictive_y_for_validingo.view(-1, 1).data.numpy()
-        
-        validloss=loss_function(predictive_y_for_validingo, valid_y_tensor)
-        
-        totalloss=trainloss+validloss
-        print('Epoch [{}/{}],trainloss: {:.4f},validloss: {:.4f},totalloss: {:.4f}'.format(epoch+1,max_epochs,trainloss,validloss,totalloss))
-        trainl.append(trainloss.item())
-        validl.append(validloss.item())
-        totall.append(totalloss.item())
-
-        
-    #损失下降图
-    lossdecrease(trainl,
-                 validl,
-                 totall
-                 )
-    
-    #train好的model进行测试    
-    #train段
-    predictive_y_for_trainingo = NN_Model(train_x_tensor)
-    
-    predictive_y_for_training = predictive_y_for_trainingo.view(-1, 1).data.numpy()
-    #vaild段
-    NN_valid_model = NN_Model.eval() # switch to validing model
-    predictive_y_for_validingo = NN_valid_model(valid_x_tensor)
-    
-    predictive_y_for_validing = predictive_y_for_validingo.view(-1, 1).data.numpy()  
-    #test段
-    NN_test_model = NN_Model.eval() # switch to testing model
-    predictive_y_for_testingo = NN_test_model(test_x_tensor)
-    
-    predictive_y_for_testing = predictive_y_for_testingo.view(-1, 1).data.numpy()
-    
-    #残差计算
-    deltaytrain,deltayvalid,deltaytest=residcount(predictive_y_for_training,
-               predictive_y_for_validing,
-               predictive_y_for_testing,
-               train_y_tensor,
-               valid_y_tensor,
-               test_y_tensor
-               )
-    
-    #计算Loss并打印
-    trainloss=loss_function(predictive_y_for_trainingo, train_y_tensor)    
-    validloss=loss_function(predictive_y_for_validingo, valid_y_tensor)    
-    testloss=loss_function(predictive_y_for_testingo, test_y_tensor)
-    
-    print("TrainLoss:{:4f}".format(trainloss))    
-    print("ValidLoss:{:4f}".format(validloss))    
-    print("TestLoss:{:4f}".format(testloss)) 
-
-    #绘制总的预测图
-    allplots(trainstep,
-             validstep,
-             teststep,
-             train_y_tensor,
-             valid_y_tensor,
-             test_y_tensor,
-             predictive_y_for_training,
-             predictive_y_for_validing,
-             predictive_y_for_testing,
-             deltaytrain,
-             deltayvalid,
-             deltaytest,
-             train_size,
-             valid_size,
-             )
-   
-    #残差分布图
-    residualsplots(data1=validstep,
-                   data2=deltayvalid
-                   )
-    
-    
-    #箱线图
-    boxplot(deltayvalid,
-            'GRU',
-            )
-    
-    #交叉分布图
-    jointplot(data1=predictive_y_for_validing,
-              data2=valid_y_tensor
-              )
-
-    
-Gru(epoches=160,
-    LR=0.001)
-
-
-# ### 5%噪声训练，10%噪声测试
 
 # In[ ]:
 
 
-def Gru(epoches=300,
-        LR=0.0006,
-        ):
-    # Define LSTM Neural Networks
-    class LstmRNN(nn.Module):
-        """
-            Parameters：
-            - input_size: feature size
-            - hidden_size: number of hidden units
-            - output_size: number of output
-            - num_layers: layers of LSTM to stack
-        """
+train_x_tensor005,train_y_tensor,valid_x_tensor020,valid_y_tensor,test_x_tensor020,test_y_tensor=data2tensor(MLP_trainX=MLP_trainX005,
+                                                                                                            train_y=train_y,
+                                                                                                            MLP_validX=MLP_validX020,
+                                                                                                            valid_y=valid_y,
+                                                                                                            MLP_testX=MLP_testX020,
+                                                                                                            test_y=test_y
+                                                                                                            )
 
-        def __init__(self, input_size, hidden_size=1, output_size=train_y.shape[1], num_layers=1):
-            super().__init__()
-
-            self.gru = nn.GRU(input_size=n_input, hidden_size=200, num_layers=3,batch_first=True)
-            self.fc = nn.Linear(hidden_size, output_size)
-            #self.dropout = nn.Dropout(p=0.1)
-
-        def forward(self, _x):
-            x, _ = self.gru(_x)
-            s, b, h = x.shape
-            x = x.reshape(s * b, h)
-            x = self.fc(x)
-            x = x.reshape(s, b, -1)
-            #x = self.dropout(x)
-            return x
-    
-    #data变tensor
-    train_x_tensor,train_y_tensor,valid_x_tensor,valid_y_tensor,test_x_tensor,test_y_tensor=data2tensor(MLP_trainX=MLP_trainX005,
-                                                                                                        train_y=train_y,
-                                                                                                        MLP_validX=MLP_validX010,
-                                                                                                        valid_y=valid_y,
-                                                                                                        MLP_testX=MLP_testX010,
-                                                                                                        test_y=test_y
-                                                                                                        )
-    
-    #对train、valid、test计算长度
-    trainstep=np.linspace(0, train_size, train_size, dtype=np.float32)
-    validstep=np.linspace(train_size,train_size+len(valid),len(valid)-sw_width-n_out,dtype=np.float32)
-    teststep=np.linspace(train_size+valid_size,train_size+valid_size+len(test),len(test)-sw_width-n_out,dtype=np.float32)
-
-    #model建立
-    NN_Model = LstmRNN(np.size(train_y,1), 200, output_size=np.size(train_y,1), num_layers=3) # 64 hidden units
-    optimizer = torch.optim.Adam(NN_Model.parameters(), lr=LR)
-    print('GRU model:', NN_Model)
-    print('model.parameters:', NN_Model.parameters)
-
-    
-    #model训练
-    loss_function = nn.MSELoss()
-    max_epochs = epoches
-    trainl=[]
-    validl=[]
-    totall=[]
-
-    for epoch in range(max_epochs):
-
-        output = NN_Model(train_x_tensor)
-        loss = loss_function(output, train_y_tensor)
-
-        loss.backward()
-        optimizer.step()
-        optimizer.zero_grad()
-
-        if (epoch+1)%10==0: #每训练10个批次可视化一下效果，并打印一下loss
-            print("Train:")
-            plt.plot(trainstep, train_y.flatten(),color='deepskyblue')
-            plt.plot(trainstep[sw_width:], output.data.numpy().flatten()[sw_width:],color='aquamarine')
-            plt.draw()
-            plt.pause(0.01)
-            print("valid:")
-            plt.plot(validstep,torch.tensor(valid_y).to(torch.float32).flatten(),color='deepskyblue')
-            plt.plot(validstep,predictive_y_for_validing,color='aquamarine')
-            plt.pause(0.01)
-
-        #train loss
-        predictive_y_for_trainingo=NN_Model(train_x_tensor)
-        trainloss=loss_function(predictive_y_for_trainingo,train_y_tensor)
-        
-        #valid loss
-        NN_valid_model = NN_Model.eval() # switch to validing model
-        predictive_y_for_validingo = NN_valid_model(valid_x_tensor)
-        predictive_y_for_validing = predictive_y_for_validingo.view(-1, 1).data.numpy()
-        
-        validloss=loss_function(predictive_y_for_validingo, valid_y_tensor)
-        
-        totalloss=trainloss+validloss
-        print('Epoch [{}/{}],trainloss: {:.4f},validloss: {:.4f},totalloss: {:.4f}'.format(epoch+1,max_epochs,trainloss,validloss,totalloss))
-        trainl.append(trainloss.item())
-        validl.append(validloss.item())
-        totall.append(totalloss.item())
-
-        
-    #损失下降图
-    lossdecrease(trainl,
-                 validl,
-                 totall
-                 )
-    
-    #train好的model进行测试    
-    #train段
-    predictive_y_for_trainingo = NN_Model(train_x_tensor)
-    
-    predictive_y_for_training = predictive_y_for_trainingo.view(-1, 1).data.numpy()
-    #vaild段
-    NN_valid_model = NN_Model.eval() # switch to validing model
-    predictive_y_for_validingo = NN_valid_model(valid_x_tensor)
-    
-    predictive_y_for_validing = predictive_y_for_validingo.view(-1, 1).data.numpy()  
-    #test段
-    NN_test_model = NN_Model.eval() # switch to testing model
-    predictive_y_for_testingo = NN_test_model(test_x_tensor)
-    
-    predictive_y_for_testing = predictive_y_for_testingo.view(-1, 1).data.numpy()
-    
-    #残差计算
-    deltaytrain,deltayvalid,deltaytest=residcount(predictive_y_for_training,
-               predictive_y_for_validing,
-               predictive_y_for_testing,
-               train_y_tensor,
-               valid_y_tensor,
-               test_y_tensor
-               )
-    
-    #计算Loss并打印
-    trainloss=loss_function(predictive_y_for_trainingo, train_y_tensor)    
-    validloss=loss_function(predictive_y_for_validingo, valid_y_tensor)    
-    testloss=loss_function(predictive_y_for_testingo, test_y_tensor)
-    
-    print("TrainLoss:{:4f}".format(trainloss))    
-    print("ValidLoss:{:4f}".format(validloss))    
-    print("TestLoss:{:4f}".format(testloss)) 
-
-    #绘制总的预测图
-    allplots(trainstep,
-             validstep,
-             teststep,
-             train_y_tensor,
-             valid_y_tensor,
-             test_y_tensor,
-             predictive_y_for_training,
-             predictive_y_for_validing,
-             predictive_y_for_testing,
-             deltaytrain,
-             deltayvalid,
-             deltaytest,
-             train_size,
-             valid_size,
-             )
-   
-    #残差分布图
-    residualsplots(data1=validstep,
-                   data2=deltayvalid
-                   )
-    
-    
-    #箱线图
-    boxplot(deltayvalid,
-            'GRU',
-            )
-    
-    #交叉分布图
-    jointplot(data1=predictive_y_for_validing,
-              data2=valid_y_tensor
-              )
-
-    
-Gru(epoches=160,
-    LR=0.001)
-
-
-# ### 5%噪声训练，20%噪声测试
 
 # In[ ]:
 
 
-def Gru(epoches=300,
-        LR=0.0006,
-        ):
-    # Define LSTM Neural Networks
-    class LstmRNN(nn.Module):
-        """
-            Parameters：
-            - input_size: feature size
-            - hidden_size: number of hidden units
-            - output_size: number of output
-            - num_layers: layers of LSTM to stack
-        """
+train_x_tensor005,train_y_tensor,valid_x_tensor030,valid_y_tensor,test_x_tensor030,test_y_tensor=data2tensor(MLP_trainX=MLP_trainX005,
+                                                                                                            train_y=train_y,
+                                                                                                            MLP_validX=MLP_validX030,
+                                                                                                            valid_y=valid_y,
+                                                                                                            MLP_testX=MLP_testX030,
+                                                                                                            test_y=test_y
+                                                                                                            )
 
-        def __init__(self, input_size, hidden_size=1, output_size=train_y.shape[1], num_layers=1):
-            super().__init__()
-
-            self.gru = nn.GRU(input_size=n_input, hidden_size=200, num_layers=3,batch_first=True)
-            self.fc = nn.Linear(hidden_size, output_size)
-            #self.dropout = nn.Dropout(p=0.1)
-
-        def forward(self, _x):
-            x, _ = self.gru(_x)
-            s, b, h = x.shape
-            x = x.reshape(s * b, h)
-            x = self.fc(x)
-            x = x.reshape(s, b, -1)
-            #x = self.dropout(x)
-            return x
-    
-    #data变tensor
-    train_x_tensor,train_y_tensor,valid_x_tensor,valid_y_tensor,test_x_tensor,test_y_tensor=data2tensor(MLP_trainX=MLP_trainX005,
-                                                                                                        train_y=train_y,
-                                                                                                        MLP_validX=MLP_validX020,
-                                                                                                        valid_y=valid_y,
-                                                                                                        MLP_testX=MLP_testX020,
-                                                                                                        test_y=test_y
-                                                                                                        )
-    
-    #对train、valid、test计算长度
-    trainstep=np.linspace(0, train_size, train_size, dtype=np.float32)
-    validstep=np.linspace(train_size,train_size+len(valid),len(valid)-sw_width-n_out,dtype=np.float32)
-    teststep=np.linspace(train_size+valid_size,train_size+valid_size+len(test),len(test)-sw_width-n_out,dtype=np.float32)
-
-    #model建立
-    NN_Model = LstmRNN(np.size(train_y,1), 200, output_size=np.size(train_y,1), num_layers=3) # 64 hidden units
-    optimizer = torch.optim.Adam(NN_Model.parameters(), lr=LR)
-    print('GRU model:', NN_Model)
-    print('model.parameters:', NN_Model.parameters)
-
-    
-    #model训练
-    loss_function = nn.MSELoss()
-    max_epochs = epoches
-    trainl=[]
-    validl=[]
-    totall=[]
-
-    for epoch in range(max_epochs):
-
-        output = NN_Model(train_x_tensor)
-        loss = loss_function(output, train_y_tensor)
-
-        loss.backward()
-        optimizer.step()
-        optimizer.zero_grad()
-
-        if (epoch+1)%10==0: #每训练10个批次可视化一下效果，并打印一下loss
-            print("Train:")
-            plt.plot(trainstep, train_y.flatten(),color='deepskyblue')
-            plt.plot(trainstep[sw_width:], output.data.numpy().flatten()[sw_width:],color='aquamarine')
-            plt.draw()
-            plt.pause(0.01)
-            print("valid:")
-            plt.plot(validstep,torch.tensor(valid_y).to(torch.float32).flatten(),color='deepskyblue')
-            plt.plot(validstep,predictive_y_for_validing,color='aquamarine')
-            plt.pause(0.01)
-
-        #train loss
-        predictive_y_for_trainingo=NN_Model(train_x_tensor)
-        trainloss=loss_function(predictive_y_for_trainingo,train_y_tensor)
-        
-        #valid loss
-        NN_valid_model = NN_Model.eval() # switch to validing model
-        predictive_y_for_validingo = NN_valid_model(valid_x_tensor)
-        predictive_y_for_validing = predictive_y_for_validingo.view(-1, 1).data.numpy()
-        
-        validloss=loss_function(predictive_y_for_validingo, valid_y_tensor)
-        
-        totalloss=trainloss+validloss
-        print('Epoch [{}/{}],trainloss: {:.4f},validloss: {:.4f},totalloss: {:.4f}'.format(epoch+1,max_epochs,trainloss,validloss,totalloss))
-        trainl.append(trainloss.item())
-        validl.append(validloss.item())
-        totall.append(totalloss.item())
-
-        
-    #损失下降图
-    lossdecrease(trainl,
-                 validl,
-                 totall
-                 )
-    
-    #train好的model进行测试    
-    #train段
-    predictive_y_for_trainingo = NN_Model(train_x_tensor)
-    
-    predictive_y_for_training = predictive_y_for_trainingo.view(-1, 1).data.numpy()
-    #vaild段
-    NN_valid_model = NN_Model.eval() # switch to validing model
-    predictive_y_for_validingo = NN_valid_model(valid_x_tensor)
-    
-    predictive_y_for_validing = predictive_y_for_validingo.view(-1, 1).data.numpy()  
-    #test段
-    NN_test_model = NN_Model.eval() # switch to testing model
-    predictive_y_for_testingo = NN_test_model(test_x_tensor)
-    
-    predictive_y_for_testing = predictive_y_for_testingo.view(-1, 1).data.numpy()
-    
-    #残差计算
-    deltaytrain,deltayvalid,deltaytest=residcount(predictive_y_for_training,
-               predictive_y_for_validing,
-               predictive_y_for_testing,
-               train_y_tensor,
-               valid_y_tensor,
-               test_y_tensor
-               )
-    
-    #计算Loss并打印
-    trainloss=loss_function(predictive_y_for_trainingo, train_y_tensor)    
-    validloss=loss_function(predictive_y_for_validingo, valid_y_tensor)    
-    testloss=loss_function(predictive_y_for_testingo, test_y_tensor)
-    
-    print("TrainLoss:{:4f}".format(trainloss))    
-    print("ValidLoss:{:4f}".format(validloss))    
-    print("TestLoss:{:4f}".format(testloss)) 
-
-    #绘制总的预测图
-    allplots(trainstep,
-             validstep,
-             teststep,
-             train_y_tensor,
-             valid_y_tensor,
-             test_y_tensor,
-             predictive_y_for_training,
-             predictive_y_for_validing,
-             predictive_y_for_testing,
-             deltaytrain,
-             deltayvalid,
-             deltaytest,
-             train_size,
-             valid_size,
-             )
-   
-    #残差分布图
-    residualsplots(data1=validstep,
-                   data2=deltayvalid
-                   )
-    
-    
-    #箱线图
-    boxplot(deltayvalid,
-            'GRU',
-            )
-    
-    #交叉分布图
-    jointplot(data1=predictive_y_for_validing,
-              data2=valid_y_tensor
-              )
-
-    
-Gru(epoches=160,
-    LR=0.001)
-
-
-# ### 5%噪声训练，30%噪声测试
 
 # In[ ]:
 
 
-def Gru(epoches=300,
-        LR=0.0006,
-        ):
-    # Define LSTM Neural Networks
-    class LstmRNN(nn.Module):
-        """
-            Parameters：
-            - input_size: feature size
-            - hidden_size: number of hidden units
-            - output_size: number of output
-            - num_layers: layers of LSTM to stack
-        """
+train_x_tensor005,train_y_tensor,valid_x_tensor050,valid_y_tensor,test_x_tensor050,test_y_tensor=data2tensor(MLP_trainX=MLP_trainX005,
+                                                                                                            train_y=train_y,
+                                                                                                            MLP_validX=MLP_validX050,
+                                                                                                            valid_y=valid_y,
+                                                                                                            MLP_testX=MLP_testX050,
+                                                                                                            test_y=test_y
+                                                                                                            )
 
-        def __init__(self, input_size, hidden_size=1, output_size=train_y.shape[1], num_layers=1):
-            super().__init__()
-
-            self.gru = nn.GRU(input_size=n_input, hidden_size=200, num_layers=3,batch_first=True)
-            self.fc = nn.Linear(hidden_size, output_size)
-            #self.dropout = nn.Dropout(p=0.1)
-
-        def forward(self, _x):
-            x, _ = self.gru(_x)
-            s, b, h = x.shape
-            x = x.reshape(s * b, h)
-            x = self.fc(x)
-            x = x.reshape(s, b, -1)
-            #x = self.dropout(x)
-            return x
-    
-    #data变tensor
-    train_x_tensor,train_y_tensor,valid_x_tensor,valid_y_tensor,test_x_tensor,test_y_tensor=data2tensor(MLP_trainX=MLP_trainX005,
-                                                                                                        train_y=train_y,
-                                                                                                        MLP_validX=MLP_validX030,
-                                                                                                        valid_y=valid_y,
-                                                                                                        MLP_testX=MLP_testX030,
-                                                                                                        test_y=test_y
-                                                                                                        )
-    
-    #对train、valid、test计算长度
-    trainstep=np.linspace(0, train_size, train_size, dtype=np.float32)
-    validstep=np.linspace(train_size,train_size+len(valid),len(valid)-sw_width-n_out,dtype=np.float32)
-    teststep=np.linspace(train_size+valid_size,train_size+valid_size+len(test),len(test)-sw_width-n_out,dtype=np.float32)
-
-    #model建立
-    NN_Model = LstmRNN(np.size(train_y,1), 200, output_size=np.size(train_y,1), num_layers=3) # 64 hidden units
-    optimizer = torch.optim.Adam(NN_Model.parameters(), lr=LR)
-    print('GRU model:', NN_Model)
-    print('model.parameters:', NN_Model.parameters)
-
-    
-    #model训练
-    loss_function = nn.MSELoss()
-    max_epochs = epoches
-    trainl=[]
-    validl=[]
-    totall=[]
-
-    for epoch in range(max_epochs):
-
-        output = NN_Model(train_x_tensor)
-        loss = loss_function(output, train_y_tensor)
-
-        loss.backward()
-        optimizer.step()
-        optimizer.zero_grad()
-
-        if (epoch+1)%10==0: #每训练10个批次可视化一下效果，并打印一下loss
-            print("Train:")
-            plt.plot(trainstep, train_y.flatten(),color='deepskyblue')
-            plt.plot(trainstep[sw_width:], output.data.numpy().flatten()[sw_width:],color='aquamarine')
-            plt.draw()
-            plt.pause(0.01)
-            print("valid:")
-            plt.plot(validstep,torch.tensor(valid_y).to(torch.float32).flatten(),color='deepskyblue')
-            plt.plot(validstep,predictive_y_for_validing,color='aquamarine')
-            plt.pause(0.01)
-
-        #train loss
-        predictive_y_for_trainingo=NN_Model(train_x_tensor)
-        trainloss=loss_function(predictive_y_for_trainingo,train_y_tensor)
-        
-        #valid loss
-        NN_valid_model = NN_Model.eval() # switch to validing model
-        predictive_y_for_validingo = NN_valid_model(valid_x_tensor)
-        predictive_y_for_validing = predictive_y_for_validingo.view(-1, 1).data.numpy()
-        
-        validloss=loss_function(predictive_y_for_validingo, valid_y_tensor)
-        
-        totalloss=trainloss+validloss
-        print('Epoch [{}/{}],trainloss: {:.4f},validloss: {:.4f},totalloss: {:.4f}'.format(epoch+1,max_epochs,trainloss,validloss,totalloss))
-        trainl.append(trainloss.item())
-        validl.append(validloss.item())
-        totall.append(totalloss.item())
-
-        
-    #损失下降图
-    lossdecrease(trainl,
-                 validl,
-                 totall
-                 )
-    
-    #train好的model进行测试    
-    #train段
-    predictive_y_for_trainingo = NN_Model(train_x_tensor)
-    
-    predictive_y_for_training = predictive_y_for_trainingo.view(-1, 1).data.numpy()
-    #vaild段
-    NN_valid_model = NN_Model.eval() # switch to validing model
-    predictive_y_for_validingo = NN_valid_model(valid_x_tensor)
-    
-    predictive_y_for_validing = predictive_y_for_validingo.view(-1, 1).data.numpy()  
-    #test段
-    NN_test_model = NN_Model.eval() # switch to testing model
-    predictive_y_for_testingo = NN_test_model(test_x_tensor)
-    
-    predictive_y_for_testing = predictive_y_for_testingo.view(-1, 1).data.numpy()
-    
-    #残差计算
-    deltaytrain,deltayvalid,deltaytest=residcount(predictive_y_for_training,
-               predictive_y_for_validing,
-               predictive_y_for_testing,
-               train_y_tensor,
-               valid_y_tensor,
-               test_y_tensor
-               )
-    
-    #计算Loss并打印
-    trainloss=loss_function(predictive_y_for_trainingo, train_y_tensor)    
-    validloss=loss_function(predictive_y_for_validingo, valid_y_tensor)    
-    testloss=loss_function(predictive_y_for_testingo, test_y_tensor)
-    
-    print("TrainLoss:{:4f}".format(trainloss))    
-    print("ValidLoss:{:4f}".format(validloss))    
-    print("TestLoss:{:4f}".format(testloss)) 
-
-    #绘制总的预测图
-    allplots(trainstep,
-             validstep,
-             teststep,
-             train_y_tensor,
-             valid_y_tensor,
-             test_y_tensor,
-             predictive_y_for_training,
-             predictive_y_for_validing,
-             predictive_y_for_testing,
-             deltaytrain,
-             deltayvalid,
-             deltaytest,
-             train_size,
-             valid_size,
-             )
-   
-    #残差分布图
-    residualsplots(data1=validstep,
-                   data2=deltayvalid
-                   )
-    
-    
-    #箱线图
-    boxplot(deltayvalid,
-            'GRU',
-            )
-    
-    #交叉分布图
-    jointplot(data1=predictive_y_for_validing,
-              data2=valid_y_tensor
-              )
-
-    
-Gru(epoches=160,
-    LR=0.001)
-
-
-# ### 5%噪声训练，50%噪声测试
 
 # In[ ]:
 
 
-def Gru(epoches=300,
-        LR=0.0006,
-        ):
-    # Define LSTM Neural Networks
-    class LstmRNN(nn.Module):
-        """
-            Parameters：
-            - input_size: feature size
-            - hidden_size: number of hidden units
-            - output_size: number of output
-            - num_layers: layers of LSTM to stack
-        """
-
-        def __init__(self, input_size, hidden_size=1, output_size=train_y.shape[1], num_layers=1):
-            super().__init__()
-
-            self.gru = nn.GRU(input_size=n_input, hidden_size=200, num_layers=3,batch_first=True)
-            self.fc = nn.Linear(hidden_size, output_size)
-            #self.dropout = nn.Dropout(p=0.1)
-
-        def forward(self, _x):
-            x, _ = self.gru(_x)
-            s, b, h = x.shape
-            x = x.reshape(s * b, h)
-            x = self.fc(x)
-            x = x.reshape(s, b, -1)
-            #x = self.dropout(x)
-            return x
-    
-    #data变tensor
-    train_x_tensor,train_y_tensor,valid_x_tensor,valid_y_tensor,test_x_tensor,test_y_tensor=data2tensor(MLP_trainX=MLP_trainX005,
-                                                                                                        train_y=train_y,
-                                                                                                        MLP_validX=MLP_validX050,
-                                                                                                        valid_y=valid_y,
-                                                                                                        MLP_testX=MLP_testX050,
-                                                                                                        test_y=test_y
-                                                                                                        )
-    
-    #对train、valid、test计算长度
-    trainstep=np.linspace(0, train_size, train_size, dtype=np.float32)
-    validstep=np.linspace(train_size,train_size+len(valid),len(valid)-sw_width-n_out,dtype=np.float32)
-    teststep=np.linspace(train_size+valid_size,train_size+valid_size+len(test),len(test)-sw_width-n_out,dtype=np.float32)
-
-    #model建立
-    NN_Model = LstmRNN(np.size(train_y,1), 200, output_size=np.size(train_y,1), num_layers=3) # 64 hidden units
-    optimizer = torch.optim.Adam(NN_Model.parameters(), lr=LR)
-    print('GRU model:', NN_Model)
-    print('model.parameters:', NN_Model.parameters)
-
-    
-    #model训练
-    loss_function = nn.MSELoss()
-    max_epochs = epoches
-    trainl=[]
-    validl=[]
-    totall=[]
-
-    for epoch in range(max_epochs):
-
-        output = NN_Model(train_x_tensor)
-        loss = loss_function(output, train_y_tensor)
-
-        loss.backward()
-        optimizer.step()
-        optimizer.zero_grad()
-
-        if (epoch+1)%10==0: #每训练10个批次可视化一下效果，并打印一下loss
-            print("Train:")
-            plt.plot(trainstep, train_y.flatten(),color='deepskyblue')
-            plt.plot(trainstep[sw_width:], output.data.numpy().flatten()[sw_width:],color='aquamarine')
-            plt.draw()
-            plt.pause(0.01)
-            print("valid:")
-            plt.plot(validstep,torch.tensor(valid_y).to(torch.float32).flatten(),color='deepskyblue')
-            plt.plot(validstep,predictive_y_for_validing,color='aquamarine')
-            plt.pause(0.01)
-
-        #train loss
-        predictive_y_for_trainingo=NN_Model(train_x_tensor)
-        trainloss=loss_function(predictive_y_for_trainingo,train_y_tensor)
-        
-        #valid loss
-        NN_valid_model = NN_Model.eval() # switch to validing model
-        predictive_y_for_validingo = NN_valid_model(valid_x_tensor)
-        predictive_y_for_validing = predictive_y_for_validingo.view(-1, 1).data.numpy()
-        
-        validloss=loss_function(predictive_y_for_validingo, valid_y_tensor)
-        
-        totalloss=trainloss+validloss
-        print('Epoch [{}/{}],trainloss: {:.4f},validloss: {:.4f},totalloss: {:.4f}'.format(epoch+1,max_epochs,trainloss,validloss,totalloss))
-        trainl.append(trainloss.item())
-        validl.append(validloss.item())
-        totall.append(totalloss.item())
-
-        
-    #损失下降图
-    lossdecrease(trainl,
-                 validl,
-                 totall
-                 )
-    
-    #train好的model进行测试    
-    #train段
-    predictive_y_for_trainingo = NN_Model(train_x_tensor)
-    
-    predictive_y_for_training = predictive_y_for_trainingo.view(-1, 1).data.numpy()
-    #vaild段
-    NN_valid_model = NN_Model.eval() # switch to validing model
-    predictive_y_for_validingo = NN_valid_model(valid_x_tensor)
-    
-    predictive_y_for_validing = predictive_y_for_validingo.view(-1, 1).data.numpy()  
-    #test段
-    NN_test_model = NN_Model.eval() # switch to testing model
-    predictive_y_for_testingo = NN_test_model(test_x_tensor)
-    
-    predictive_y_for_testing = predictive_y_for_testingo.view(-1, 1).data.numpy()
-    
-    #残差计算
-    deltaytrain,deltayvalid,deltaytest=residcount(predictive_y_for_training,
-               predictive_y_for_validing,
-               predictive_y_for_testing,
-               train_y_tensor,
-               valid_y_tensor,
-               test_y_tensor
-               )
-    
-    #计算Loss并打印
-    trainloss=loss_function(predictive_y_for_trainingo, train_y_tensor)    
-    validloss=loss_function(predictive_y_for_validingo, valid_y_tensor)    
-    testloss=loss_function(predictive_y_for_testingo, test_y_tensor)
-    
-    print("TrainLoss:{:4f}".format(trainloss))    
-    print("ValidLoss:{:4f}".format(validloss))    
-    print("TestLoss:{:4f}".format(testloss)) 
-
-    #绘制总的预测图
-    allplots(trainstep,
-             validstep,
-             teststep,
-             train_y_tensor,
-             valid_y_tensor,
-             test_y_tensor,
-             predictive_y_for_training,
-             predictive_y_for_validing,
-             predictive_y_for_testing,
-             deltaytrain,
-             deltayvalid,
-             deltaytest,
-             train_size,
-             valid_size,
-             )
-   
-    #残差分布图
-    residualsplots(data1=validstep,
-                   data2=deltayvalid
-                   )
-    
-    
-    #箱线图
-    boxplot(deltayvalid,
-            'GRU',
-            )
-    
-    #交叉分布图
-    jointplot(data1=predictive_y_for_validing,
-              data2=valid_y_tensor
-              )
-
-    
-Gru(epoches=160,
-    LR=0.001)
-
+RNN_fit('GRU',
+        epoches=200,
+        LR=0.0005,
+        train_x_tensor=train_x_tensor005,
+        train_y_tensor=train_y_tensor,
+        valid_x_tensor=valid_x_tensor,#010 020 030 050
+        valid_y_tensor=valid_y_tensor,
+        test_x_tensor=test_x_tensor,#010 020 030 050
+        test_y_tensor=test_y_tensor,
+        )
